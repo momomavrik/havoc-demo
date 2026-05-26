@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Havoc — All-Domain Collaborative Autonomy</title>
+<style>
+@font-face {
+  font-family: 'Degular';
+  src: url('Degular_Variable.otf') format('opentype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --blue: #1A6FD4;
+  --blue-dark: #1560bc;
+  --black: #111111;
+  --gray-dark: #3a3a3a;
+  --gray-mid: #6b6b6b;
+  --gray-light: #f4f4f4;
+  --gray-border: #e0e0e0;
+  --white: #ffffff;
+  --font-display: 'Degular', sans-serif;
+  --font-body: 'Degular', sans-serif;
+}
+
+html { scroll-behavior: smooth; background: #1a1a1a; } /* dark overscroll at bottom */
+body {
+  font-family: var(--font-body);
+  background: var(--white);
+  color: var(--black);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none; /* prevents rubber-band white flash on some browsers */
+}
+/* hide URL tooltip on hover for all links and buttons */
+a, button { -webkit-user-drag: none; }
+a[href] { cursor: pointer; }
+/* force status bar off — achieved by using JS-driven href="#" pattern already in place */
+
+/* ── BANNER ──────────────────────────────────────── */
+#banner {
+  background: #1A6FD4;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 9px 48px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 400;
+  position: fixed; top: 0; left: 0; right: 0;
+  z-index: 200;
+  transition: transform 0.4s cubic-bezier(.4,0,.2,1), opacity 0.3s;
+}
+#banner a { color: #fff; font-weight: 600; white-space: nowrap; text-decoration: none; }
+#banner a:hover { text-decoration: underline; }
+#banner-close {
+  position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; color: rgba(255,255,255,0.75);
+  font-size: 18px; cursor: pointer; line-height: 1; padding: 2px 6px;
+}
+#banner-close:hover { color: #fff; }
+
+/* ── NAV ─────────────────────────────────────────── */
+#nav-wrap {
+  position: fixed; left: 0; right: 0;
+  /* top set dynamically by JS based on actual banner height */
+  z-index: 100;
+  display: flex; justify-content: center;
+  padding: 16px 80px;
+  pointer-events: none;
+  transition: top 0.4s cubic-bezier(.4,0,.2,1),
+              transform 0.4s cubic-bezier(.4,0,.2,1),
+              opacity 0.3s;
+}
+#nav-wrap.hidden { transform: translateY(-120%); opacity: 0; }
+#nav {
+  pointer-events: all;
+  display: flex; align-items: center;
+  background: rgba(255,255,255,0.72);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 8px;
+  padding: 6px 6px 6px 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  white-space: nowrap;
+  width: 100%;
+}
+.nav-logo {
+  display: flex; align-items: center;
+  text-decoration: none; margin-right: 8px; flex-shrink: 0;
+}
+.nav-links {
+  display: flex; align-items: center; flex: 1;
+  justify-content: center;
+}
+.nav-links a {
+  font-family: var(--font-body); font-size: 13px; font-weight: 500;
+  color: #444; text-decoration: none;
+  padding: 7px 13px; border-radius: 4px;
+  transition: background 0.15s, color 0.15s;
+}
+.nav-links a:hover { background: rgba(0,0,0,0.05); color: var(--black); }
+.nav-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.nav-demo {
+  font-family: var(--font-body); font-size: 13px; font-weight: 600;
+  background: var(--blue); color: #fff;
+  border: none; border-radius: 4px; padding: 9px 20px;
+  cursor: pointer; text-decoration: none;
+  transition: background 0.15s;
+}
+.nav-demo:hover { background: var(--blue-dark); }
+.nav-search, .nav-company {
+  font-family: var(--font-body); font-size: 13px; font-weight: 500;
+  color: #444; background: none; border: none; cursor: pointer;
+  padding: 7px 10px; border-radius: 4px;
+  transition: background 0.15s;
+}
+.nav-search:hover, .nav-company:hover { background: rgba(0,0,0,0.05); }
+
+/* ── HERO ────────────────────────────────────────── */
+#hero {
+  position: relative;
+  height: 100vh; min-height: 560px;
+  background: #1a1a1a;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+#hero-video {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover; opacity: 0.55;
+}
+#hero-scrim {
+  position: absolute; inset: 0;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.45) 100%);
+}
+.hero-content {
+  position: relative; z-index: 2;
+  text-align: center; padding: 0 24px;
+  max-width: 760px;
+}
+.hero-h1 {
+  font-family: var(--font-display);
+  font-size: clamp(40px, 5.5vw, 76px);
+  font-weight: 600; line-height: 0.97; letter-spacing: -0.02em;
+  text-transform: uppercase; color: #fff;
+  margin-bottom: 20px;
+}
+.hero-sub {
+  font-family: var(--font-body);
+  font-size: clamp(14px, 1.5vw, 17px);
+  font-weight: 300; line-height: 1.65;
+  color: rgba(255,255,255,0.80);
+  max-width: 520px; margin: 0 auto 32px;
+}
+.hero-btns { display: flex; align-items: center; justify-content: center; gap: 16px; }
+.hero-btn-primary {
+  font-family: var(--font-body); font-size: 14px; font-weight: 600;
+  background: var(--blue); color: #fff;
+  border: none; border-radius: 4px; padding: 13px 26px;
+  cursor: pointer; text-decoration: none;
+  transition: background 0.15s;
+}
+.hero-btn-primary:hover { background: var(--blue-dark); }
+.hero-btn-ghost {
+  font-family: var(--font-body); font-size: 14px; font-weight: 500;
+  color: #fff; text-decoration: none;
+  display: flex; align-items: center; gap: 5px;
+  transition: gap 0.2s;
+}
+.hero-btn-ghost:hover { gap: 9px; }
+.hero-scroll {
+  position: absolute; right: 40px; bottom: 36px;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  color: rgba(255,255,255,0.4); font-size: 9px;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  font-family: var(--font-body);
+  transition: opacity 0.4s ease;
+}
+.hero-scroll.hidden { opacity: 0; pointer-events: none; }
+.hero-scroll-line {
+  width: 1px; height: 48px;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.5), transparent);
+  animation: scrollFade 2s ease-in-out infinite;
+}
+@keyframes scrollFade { 0%,100%{opacity:0.3} 50%{opacity:1} }
+
+/* ── MISSION ─────────────────────────────────────── */
+#mission {
+  background: var(--white);
+  padding: 96px 80px;
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+}
+.mission-label {
+  font-family: var(--font-display);
+  font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--gray-mid);
+  margin-bottom: 24px;
+}
+.mission-text {
+  font-family: var(--font-display);
+  font-size: clamp(24px, 3.2vw, 46px);
+  font-weight: 600; line-height: 1.15; letter-spacing: -0.02em;
+  color: var(--black);
+  max-width: 900px;
+}
+.mission-text .w { display: inline; opacity: 0.15; transition: opacity 0.3s ease; }
+.mission-text .w.on { opacity: 1; }
+
+/* ── STACK / FEATURE BLOCKS ──────────────────────── */
+#stack { background: var(--white); padding: 0 80px 80px; }
+.feature-row {
+  display: grid; grid-template-columns: 1fr 1fr;
+  border: 1px solid var(--gray-border);
+  margin-bottom: 1px;
+}
+.feature-row.flip { direction: rtl; }
+.feature-row.flip > * { direction: ltr; }
+.feat-img {
+  background: #d8d8d8;
+  aspect-ratio: 4/3;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden; position: relative;
+}
+.feat-img::before { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom right, transparent calc(50% - 0.5px), rgba(0,0,0,0.15) calc(50%), transparent calc(50% + 0.5px)); }
+.feat-img::after  { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom left,  transparent calc(50% - 0.5px), rgba(0,0,0,0.15) calc(50%), transparent calc(50% + 0.5px)); }
+.feat-body {
+  padding: 52px 48px;
+  display: flex; flex-direction: column; justify-content: center;
+  border-left: 1px solid var(--gray-border);
+}
+.feature-row.flip .feat-body { border-left: none; border-right: 1px solid var(--gray-border); }
+.feat-tag {
+  font-family: var(--font-display); font-size: 13px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--gray-mid); margin-bottom: 10px;
+}
+.feat-h2 {
+  font-family: var(--font-display);
+  font-size: clamp(20px, 2.2vw, 30px);
+  font-weight: 700; line-height: 1.1; letter-spacing: -0.02em;
+  color: var(--black);
+  margin-bottom: 14px;
+}
+.feat-p { font-size: 14px; line-height: 1.75; color: #555; font-weight: 400; margin-bottom: 18px; }
+.feat-checks { list-style: none; margin-bottom: 28px; }
+.feat-checks li {
+  font-size: 13.5px; color: #444;
+  padding: 8px 0; border-bottom: 1px solid var(--gray-border);
+  display: flex; align-items: flex-start; gap: 10px; line-height: 1.45;
+}
+.feat-checks li:first-child { border-top: 1px solid var(--gray-border); }
+.check-icon {
+  width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px;
+  border-radius: 50%; background: #eaf1fb;
+  display: flex; align-items: center; justify-content: center;
+}
+.check-icon svg { display: block; }
+.feat-cta {
+  font-family: var(--font-body); font-size: 14px; font-weight: 600;
+  background: var(--blue); color: #fff;
+  border: none; border-radius: 4px; padding: 12px 22px;
+  cursor: pointer; text-decoration: none; display: inline-block;
+  transition: background 0.15s; align-self: flex-start;
+}
+.feat-cta:hover { background: var(--blue-dark); }
+
+/* ── TABS SECTION ────────────────────────────────── */
+#capabilities {
+  background: #1a1e24;
+  padding: 80px;
+}
+.caps-h2 {
+  font-family: var(--font-display);
+  font-size: clamp(24px, 2.8vw, 38px);
+  font-weight: 600; letter-spacing: -0.02em;
+  text-align: center; margin-bottom: 36px;
+  color: #fff;
+}
+.tabs-nav { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 48px; }
+.tab-pill {
+  font-family: var(--font-body); font-size: 13px; font-weight: 500;
+  padding: 9px 18px; border-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: transparent; color: rgba(255,255,255,0.5);
+  cursor: pointer;
+  position: relative; overflow: hidden;
+  transition: color 0.15s, border-color 0.15s;
+}
+.tab-pill .pill-fill {
+  position: absolute; inset: 0;
+  background: rgba(255,255,255,0.18);
+  transform-origin: left center;
+  transform: scaleX(0);
+  border-radius: 4px;
+  pointer-events: none;
+  will-change: transform;
+}
+/* active = brighter border + white text; fill sweep visible underneath */
+.tab-pill.active {
+  border-color: rgba(255,255,255,0.55);
+  color: #fff;
+}
+.tab-pill:hover:not(.active) { border-color: rgba(255,255,255,0.4); color: rgba(255,255,255,0.85); }
+
+/* panels container — fixed height so nothing jumps */
+#tab-panels-wrap {
+  position: relative;
+  min-height: 380px; /* tall enough for any panel */
+}
+.tab-panel {
+  position: absolute; inset: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 72px;
+  align-items: start;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  pointer-events: none;
+}
+.tab-panel.active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: all;
+  position: relative; /* active one takes up space, pushes section height */
+}
+
+.tab-left {}
+.tab-right { align-self: start; }
+.tab-img {
+  width: 100%;
+  height: 320px;       /* fixed height — never grows */
+  background: #2a2e36;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.tab-img img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover; display: block;
+}
+.tab-img::before { content: ''; position: absolute; inset: 0; z-index: 1; background: linear-gradient(to bottom right, transparent calc(50% - 0.5px), rgba(255,255,255,0.06) calc(50%), transparent calc(50% + 0.5px)); }
+.tab-img::after  { content: ''; position: absolute; inset: 0; z-index: 1; background: linear-gradient(to bottom left,  transparent calc(50% - 0.5px), rgba(255,255,255,0.06) calc(50%), transparent calc(50% + 0.5px)); }
+
+.tab-eyebrow {
+  font-family: var(--font-display); font-size: 12px; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.45);
+  margin-bottom: 10px;
+}
+.tab-h3 {
+  font-family: var(--font-display);
+  font-size: clamp(18px, 2.2vw, 26px);
+  font-weight: 700; line-height: 1.15; letter-spacing: -0.02em;
+  color: #fff; margin-bottom: 14px;
+}
+.tab-p { font-size: 14px; line-height: 1.75; color: rgba(255,255,255,0.6); margin-bottom: 18px; }
+.tab-checks { list-style: none; margin-bottom: 28px; }
+.tab-checks li {
+  font-size: 13.5px; color: rgba(255,255,255,0.7); padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  display: flex; align-items: flex-start; gap: 10px; line-height: 1.45;
+}
+.tab-checks li:first-child { border-top: 1px solid rgba(255,255,255,0.08); }
+.tab-cta {
+  font-family: var(--font-body); font-size: 14px; font-weight: 600;
+  background: var(--blue); color: #fff;
+  border: none; border-radius: 4px; padding: 12px 22px;
+  cursor: pointer; text-decoration: none; display: inline-block;
+  transition: background 0.15s; margin-bottom: 36px;
+}
+.tab-cta:hover { background: var(--blue-dark); }
+.subdomain-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.subdomain-name {
+  font-family: var(--font-display); font-size: 14px; font-weight: 700;
+  color: #fff; margin-bottom: 6px;
+}
+.subdomain-desc { font-size: 13px; color: rgba(255,255,255,0.5); line-height: 1.55; }
+
+/* ── LOGOS ───────────────────────────────────────── */
+#trusted {
+  border-top: 1px solid var(--gray-border);
+  border-bottom: 1px solid var(--gray-border);
+  background: var(--white);
+  padding: 36px 0 32px;
+  overflow: hidden;
+}
+.trusted-label {
+  font-family: var(--font-display); font-size: 12px; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--gray-mid);
+  text-align: center; margin-bottom: 28px;
+}
+.marquee-wrap {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+}
+.marquee-track {
+  display: flex; align-items: center;
+  width: max-content;
+  animation: marquee 28s linear infinite;
+}
+@keyframes marquee { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+.logo-cell {
+  padding: 0 48px;
+  display: flex; align-items: center; gap: 10px;
+  border-right: 1px solid var(--gray-border);
+  font-family: var(--font-body); font-size: 13px; font-weight: 500;
+  letter-spacing: 0.05em; color: #c0c0c0;
+  white-space: nowrap; height: 56px; flex-shrink: 0;
+  transition: color 0.2s;
+}
+.logo-cell:hover { color: #888; }
+.logo-icon {
+  width: 20px; height: 20px;
+  background: #d8d8d8; border-radius: 3px; flex-shrink: 0;
+  display: inline-block;
+}
+
+/* ── CUSTOMER STORY ──────────────────────────────── */
+#story {
+  display: grid; grid-template-columns: 1fr 1fr;
+  border-top: 1px solid var(--gray-border);
+}
+.story-media {
+  background: #ccc; position: relative;
+  min-height: 460px; display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+.play-btn {
+  position: relative; z-index: 2;
+  width: 60px; height: 60px; border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.6); background: rgba(0,0,0,0.2);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: border-color 0.2s, background 0.2s;
+}
+.play-btn:hover { border-color: var(--blue); background: rgba(26,111,212,0.2); }
+.play-btn svg { margin-left: 3px; }
+.story-content {
+  background: var(--gray-light); padding: 60px 52px;
+  display: flex; flex-direction: column; justify-content: center;
+  border-left: 1px solid var(--gray-border);
+}
+.story-eyebrow {
+  font-family: var(--font-display); font-size: 12px; font-weight: 600;
+  letter-spacing: 0.15em; text-transform: uppercase; color: var(--gray-mid);
+  margin-bottom: 14px;
+}
+.story-h2 {
+  font-family: var(--font-display);
+  font-size: clamp(22px, 2.8vw, 36px);
+  font-weight: 700; line-height: 1.1; letter-spacing: -0.02em;
+  color: var(--black); margin-bottom: 18px;
+}
+.story-p { font-size: 14px; line-height: 1.75; color: #555; margin-bottom: 24px; }
+.story-cta {
+  font-family: var(--font-body); font-size: 14px; font-weight: 600;
+  background: var(--blue); color: #fff;
+  border: none; border-radius: 4px; padding: 12px 22px;
+  cursor: pointer; text-decoration: none; display: inline-block;
+  margin-bottom: 36px; align-self: flex-start; transition: background 0.15s;
+}
+.story-cta:hover { background: var(--blue-dark); }
+.stats-label {
+  font-family: var(--font-display); font-size: 11px; font-weight: 600;
+  letter-spacing: 0.15em; text-transform: uppercase; color: var(--gray-mid);
+  margin-bottom: 12px;
+}
+.stats-row {
+  display: grid; grid-template-columns: repeat(3,1fr);
+  border: 1px solid var(--gray-border); border-radius: 4px; overflow: hidden;
+}
+.stat { background: #fff; padding: 18px 14px; text-align: center; border-right: 1px solid var(--gray-border); }
+.stat:last-child { border-right: none; }
+.stat-n { font-family: var(--font-display); font-size: 28px; font-weight: 800; letter-spacing: -0.02em; color: var(--black); line-height: 1; }
+.stat-l { font-size: 11px; color: var(--gray-mid); margin-top: 4px; line-height: 1.3; }
+.story-arrows { display: flex; gap: 8px; margin-top: 20px; }
+.arrow-btn {
+  width: 32px; height: 32px; border-radius: 50%;
+  border: 1px solid var(--gray-border); background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 15px; color: #555; transition: all 0.15s;
+}
+.arrow-btn.on { background: var(--blue); color: #fff; border-color: var(--blue); }
+.arrow-btn:hover:not(.on) { border-color: #aaa; }
+
+/* ── NEWS ────────────────────────────────────────── */
+#news {
+  padding: 72px 80px;
+  background: var(--white);
+  border-top: 1px solid var(--gray-border);
+}
+.news-top {
+  display: flex; align-items: baseline;
+  justify-content: space-between; margin-bottom: 36px;
+}
+.news-top-left { display: flex; align-items: baseline; gap: 20px; }
+.news-h2 { font-family: var(--font-display); font-size: clamp(26px, 3vw, 40px); font-weight: 600; letter-spacing: -0.02em; color: var(--black); }
+.news-view-all { font-size: 13px; font-weight: 500; color: var(--blue); text-decoration: none; display: flex; align-items: center; gap: 4px; transition: gap 0.15s; }
+.news-view-all:hover { gap: 8px; }
+.news-pager { display: flex; gap: 8px; }
+.pg-btn {
+  width: 32px; height: 32px; border-radius: 50%;
+  border: 1px solid var(--gray-border); background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 15px; color: #555; transition: all 0.15s;
+}
+.pg-btn.on { background: var(--blue); color: #fff; border-color: var(--blue); }
+.pg-btn:hover:not(.on) { border-color: #aaa; }
+.news-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
+.news-card {
+  background: var(--gray-light);
+  border: 1px solid var(--gray-border); border-radius: 2px;
+  overflow: hidden; cursor: pointer; transition: box-shadow 0.2s;
+}
+.news-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.09); }
+.news-thumb { background: #ccc; aspect-ratio: 16/9; overflow: hidden; }
+.news-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.news-meta { padding: 14px 16px 6px; display: flex; justify-content: space-between; align-items: center; }
+.news-tag { font-family: var(--font-body); font-size: 11px; font-weight: 500; color: var(--gray-mid); }
+.news-date { font-size: 11px; color: var(--gray-mid); }
+.news-hed { padding: 6px 16px 20px; font-family: var(--font-body); font-size: 14px; font-weight: 600; line-height: 1.4; color: var(--blue); }
+
+/* ── CTA DARK BAND ───────────────────────────────── */
+#cta-band {
+  background: var(--gray-dark);
+  display: grid; grid-template-columns: 1fr 1fr;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.cta-half { padding: 72px 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 22px; }
+.cta-half + .cta-half { border-left: 1px solid rgba(255,255,255,0.1); }
+.cta-p { font-family: var(--font-display); font-size: clamp(18px, 2vw, 24px); font-weight: 700; letter-spacing: -0.01em; color: #fff; line-height: 1.3; max-width: 280px; }
+.cta-btn { font-family: var(--font-body); font-size: 14px; font-weight: 600; background: var(--blue); color: #fff; border: none; border-radius: 4px; padding: 13px 28px; cursor: pointer; text-decoration: none; transition: background 0.15s; }
+.cta-btn:hover { background: var(--blue-dark); }
+
+/* ── FOOTER ──────────────────────────────────────── */
+footer {
+  background: #1a1a1a;
+  border-top: 1px solid rgba(255,255,255,0.07);
+  padding: 64px 80px 0;
+}
+.footer-top { display: grid; grid-template-columns: 200px 1fr 1fr 1fr auto; gap: 48px; margin-bottom: 56px; }
+.footer-logo { display: block; text-decoration: none; margin-bottom: 12px; }
+.footer-tagline { font-size: 13px; color: rgba(255,255,255,0.4); line-height: 1.6; }
+.footer-col h4 { font-family: var(--font-display); font-size: 12px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,255,255,0.4); margin-bottom: 18px; }
+.footer-col a { display: block; font-size: 13.5px; font-weight: 400; color: rgba(255,255,255,0.6); text-decoration: none; margin-bottom: 10px; transition: color 0.15s; }
+.footer-col a:hover { color: #fff; }
+.footer-addr { font-size: 13px; color: rgba(255,255,255,0.5); line-height: 1.7; }
+.footer-addr strong { color: rgba(255,255,255,0.7); font-weight: 500; }
+.view-locs { font-size: 12px; color: var(--blue); text-decoration: none; margin-top: 6px; display: inline-block; }
+.footer-contact { font-family: var(--font-body); font-size: 13px; font-weight: 600; background: var(--blue); color: #fff; border: none; border-radius: 4px; padding: 12px 22px; cursor: pointer; text-decoration: none; transition: background 0.15s; white-space: nowrap; }
+.footer-contact:hover { background: var(--blue-dark); }
+.footer-bottom {
+  background: #1a1a1a;
+  margin: 0 -80px; /* bleed to edges */
+  padding: 20px 80px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+.footer-legal { font-size: 11.5px; color: rgba(255,255,255,0.25); }
+.footer-legal a { color: rgba(255,255,255,0.35); text-decoration: none; margin-left: 16px; }
+.footer-legal a:hover { color: rgba(255,255,255,0.65); }
+.social-links { display: flex; gap: 10px; }
+.s-btn { width: 30px; height: 30px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.4); font-size: 11px; font-weight: 700; text-decoration: none; transition: all 0.15s; font-family: var(--font-body); }
+.s-btn:hover { border-color: rgba(255,255,255,0.45); color: #fff; }
+
+/* ── RESPONSIVE ──────────────────────────────────── */
+@media (max-width: 1024px) {
+  #mission, #stack, #capabilities, #news, footer, .cta-half { padding-left: 40px; padding-right: 40px; }
+  .footer-top { grid-template-columns: 1fr 1fr 1fr; }
+}
+@media (max-width: 768px) {
+  .feature-row, #story, #cta-band { grid-template-columns: 1fr; }
+  .tab-panel { grid-template-columns: 1fr !important; }
+  .feature-row.flip { direction: ltr; }
+  .feat-body { border-left: none !important; border-right: none !important; border-top: 1px solid var(--gray-border); }
+  .news-grid { grid-template-columns: 1fr 1fr; }
+  .footer-top { grid-template-columns: 1fr 1fr; }
+  .nav-links { display: none; }
+  #mission, #stack, #capabilities, #news, footer, .cta-half { padding-left: 20px; padding-right: 20px; }
+  .story-content { padding: 40px 24px; }
+}
+</style>
+</head>
+<body>
+
+<!-- BANNER -->
+<div id="banner">
+  <span>Havoc raises $100M Series A — total capital raised ~$200M since 2024.</span>
+  <a href="https://medium.com/@HavocAI/havoc-raises-100m-series-a-to-power-the-future-of-all-domain-collaborative-autonomy-e6e73be4ac23" target="_blank">Read More &rsaquo;</a>
+  <button id="banner-close">&#x2715;</button>
+</div>
+
+<!-- NAV -->
+<div id="nav-wrap">
+  <nav id="nav">
+    <a class="nav-logo" href="#"><img src="logo-black.png" alt="Havoc" style="height:20px;display:block;"></a>
+    <div class="nav-links">
+      <a href="#stack">Technology</a>
+      <a href="#capabilities">Defense</a>
+      <a href="#capabilities">Commercial</a>
+      <a href="#capabilities">Sea</a>
+      <a href="#capabilities">Air</a>
+      <a href="#capabilities">Land</a>
+    </div>
+    <div class="nav-right">
+      <a class="nav-demo" href="#footer">Get a Demo</a>
+      <button class="nav-search">&#9906;</button>
+      <button class="nav-company">Company</button>
+    </div>
+  </nav>
+</div>
+
+<!-- HERO -->
+<section id="hero">
+  <video id="hero-video" autoplay muted loop playsinline>
+    <source src="Landing.mp4" type="video/mp4">
+  </video>
+  <div id="hero-scrim"></div>
+  <div class="hero-content">
+    <h1 class="hero-h1">All-Domain Collaborative<br>Autonomy</h1>
+    <p class="hero-sub">Our systems and software power real-time, AI-driven decisions across sea, air, and land — delivering collaborative autonomy from the factory floor to the front lines.</p>
+    <div class="hero-btns">
+      <a class="hero-btn-primary" href="#stack">Explore the Technology</a>
+      <a class="hero-btn-ghost" href="#footer">Get a Demo &rsaquo;</a>
+    </div>
+  </div>
+  <div class="hero-scroll" id="heroScroll">
+    <div class="hero-scroll-line"></div>
+    <span>Scroll</span>
+  </div>
+</section>
+
+<!-- MISSION -->
+<section id="mission">
+  <p class="mission-label">Our Mission</p>
+  <p class="mission-text" id="missionPara"></p>
+</section>
+
+<!-- FEATURE BLOCKS -->
+<section id="stack">
+  <div class="feature-row">
+    <div class="feat-img" style="background:#1a1a1a">
+      <img src="image-1.png" alt="HavocOS" style="width:100%;height:100%;object-fit:cover;display:block;position:absolute;inset:0">
+    </div>
+    <div class="feat-body">
+      <p class="feat-tag">HavocOS — The Autonomy Stack</p>
+      <h2 class="feat-h2">Software-Defined Hardware. Every Platform.</h2>
+      <p class="feat-p">Real-time decision-making and control for full collaborative autonomy. The Havoc stack fuses sensing, planning, and execution — enabling heterogeneous assets to self-organize and complete complex missions with minimal human supervision. Modular. Platform-agnostic. Field-proven.</p>
+      <ul class="feat-checks">
+        <li><span class="check-icon"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l2.5 2.5L9 1" stroke="#1A6FD4" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Runs unmodified across 100+ air, surface, and ground platforms</li>
+        <li><span class="check-icon"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l2.5 2.5L9 1" stroke="#1A6FD4" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>25,000+ hours of autonomous testing across real-world contested environments</li>
+      </ul>
+      <a class="feat-cta" href="#">See How it Works</a>
+    </div>
+  </div>
+  <div class="feature-row flip">
+    <div class="feat-img" style="background:#1a1a1a">
+      <img src="image-2.png" alt="Havoc Control" style="width:100%;height:100%;object-fit:cover;display:block;position:absolute;inset:0">
+    </div>
+    <div class="feat-body">
+      <p class="feat-tag">Havoc Control — Fleet Command</p>
+      <h2 class="feat-h2">One Operator. Thousands of Assets.</h2>
+      <p class="feat-p">An intuitive, mission-focused interface that lets a single operator command, monitor, and re-task entire autonomous fleets in real time. Designed to collapse the distance between human intent and machine execution — without sacrificing situational awareness.</p>
+      <ul class="feat-checks">
+        <li><span class="check-icon"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l2.5 2.5L9 1" stroke="#1A6FD4" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Single UI window for fleet-scale supervision and real-time re-tasking</li>
+        <li><span class="check-icon"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l2.5 2.5L9 1" stroke="#1A6FD4" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Human-on-the-loop — amplifies oversight, never replaces the operator</li>
+      </ul>
+      <a class="feat-cta" href="#">See How it Works</a>
+    </div>
+  </div>
+</section>
+
+<!-- TABS -->
+<section id="capabilities">
+  <h2 class="caps-h2">Autonomy That Performs</h2>
+  <div class="tabs-nav" id="tabsNav">
+    <button class="tab-pill" data-idx="0">All-Domain Collaboration<span class="pill-fill"></span></button>
+    <button class="tab-pill" data-idx="1">Scalability &amp; Interoperability<span class="pill-fill"></span></button>
+    <button class="tab-pill" data-idx="2">Intuitive HOTL Control<span class="pill-fill"></span></button>
+    <button class="tab-pill" data-idx="3">Reliability &amp; Resilience<span class="pill-fill"></span></button>
+  </div>
+
+  <div id="tab-panels-wrap">
+  <div class="tab-panel" id="tp-0">
+    <div class="tab-left">
+      <p class="tab-eyebrow">Sea · Air · Land</p>
+      <h3 class="tab-h3">Every domain. One operating picture.</h3>
+      <p class="tab-p">Havoc's stack is architecturally domain-agnostic — the same decision-making software runs across vessels, drones, and ground vehicles without modification. Acquisitions of Mavrik (air) and Teleo (land) unite all three domains under a single architecture.</p>
+      <a class="tab-cta" href="#">Learn More</a>
+      <div class="subdomain-grid" style="grid-template-columns:1fr 1fr 1fr;">
+        <div><p class="subdomain-name">Sea</p><p class="subdomain-desc">100+ ASVs deployed globally. 30+ vessels delivered to the U.S. Department of Defense.</p></div>
+        <div><p class="subdomain-name">Air</p><p class="subdomain-desc">Award-winning aerial systems via Mavrik, fully integrated on the Havoc stack.</p></div>
+        <div><p class="subdomain-name">Land</p><p class="subdomain-desc">Supervised ground autonomy for heavy machinery and vehicles via Teleo.</p></div>
+      </div>
+    </div>
+    <div class="tab-right">
+      <div class="tab-img"><img src="all-domain.png" alt="All-Domain Collaboration"></div>
+    </div>
+  </div>
+
+  <div class="tab-panel" id="tp-1">
+    <div class="tab-left">
+      <p class="tab-eyebrow">Scale &amp; Interop</p>
+      <h3 class="tab-h3">Any platform. Any sensor. Any environment.</h3>
+      <p class="tab-p">Havoc's modular architecture integrates with any platform or sensor. Validated across 100+ platforms, 25,000+ hours of testing, and 200 billion operational data points from global deployments.</p>
+      <ul class="tab-checks">
+        <li><span class="check-icon"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l2.5 2.5L9 1" stroke="#1A6FD4" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Platform-agnostic — zero code changes required across domains</li>
+        <li><span class="check-icon"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l2.5 2.5L9 1" stroke="#1A6FD4" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>200B+ data points powering a field-tested autonomy stack</li>
+      </ul>
+      <a class="tab-cta" href="#">Learn More</a>
+    </div>
+    <div class="tab-right">
+      <div class="tab-img"><img src="scalability.png" alt="Scalability"></div>
+    </div>
+  </div>
+
+  <div class="tab-panel" id="tp-2">
+    <div class="tab-left">
+      <p class="tab-eyebrow">Human-on-the-Loop</p>
+      <h3 class="tab-h3">Human intent at machine speed.</h3>
+      <p class="tab-p">Havoc amplifies human oversight — it doesn't replace operators. Havoc Control keeps humans in command while machines execute at the scale and speed modern conflict demands. Three-time xTech winner with $6M in SBIR awards.</p>
+      <ul class="tab-checks">
+        <li><span class="check-icon"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l2.5 2.5L9 1" stroke="#1A6FD4" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Mission-focused UI minimizes cognitive load at swarm scale</li>
+        <li><span class="check-icon"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l2.5 2.5L9 1" stroke="#1A6FD4" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Dynamic re-tasking and real-time collaborative mission updates</li>
+      </ul>
+      <a class="tab-cta" href="#">Learn More</a>
+    </div>
+    <div class="tab-right">
+      <div class="tab-img"><img src="intuitive.jpg" alt="HOTL Control"></div>
+    </div>
+  </div>
+
+  <div class="tab-panel" id="tp-3">
+    <div class="tab-left">
+      <p class="tab-eyebrow">Reliability &amp; Resilience</p>
+      <h3 class="tab-h3">Operates when comms go dark.</h3>
+      <p class="tab-p">Designed and validated for GPS-denied and EW-contested environments. Demonstrated to Ukrainian officials in live GPS-denied conditions. Assets self-organize and continue executing missions with zero connectivity.</p>
+      <ul class="tab-checks">
+        <li><span class="check-icon"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l2.5 2.5L9 1" stroke="#1A6FD4" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Validated in GPS-denied and comms-disrupted real-world environments</li>
+        <li><span class="check-icon"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l2.5 2.5L9 1" stroke="#1A6FD4" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Self-organizing swarms maintain mission continuity without a network</li>
+      </ul>
+      <a class="tab-cta" href="#">Learn More</a>
+    </div>
+    <div class="tab-right">
+      <div class="tab-img"><img src="reliability.jpg" alt="Reliability"></div>
+    </div>
+  </div>
+  </div> <!-- /tab-panels-wrap -->
+</section>
+
+<!-- LOGOS -->
+<section id="trusted">
+  <p class="trusted-label">Trusted by the Industry</p>
+  <div class="marquee-wrap">
+    <div class="marquee-track">
+      <div class="logo-cell"><span class="logo-icon"></span>Lockheed Martin</div>
+      <div class="logo-cell"><span class="logo-icon"></span>Leidos</div>
+      <div class="logo-cell"><span class="logo-icon"></span>SAIC</div>
+      <div class="logo-cell"><span class="logo-icon"></span>Hanwha Defense</div>
+      <div class="logo-cell"><span class="logo-icon"></span>B Capital</div>
+      <div class="logo-cell"><span class="logo-icon"></span>U.S. Department of Defense</div>
+      <div class="logo-cell"><span class="logo-icon"></span>Northrop Grumman</div>
+      <div class="logo-cell"><span class="logo-icon"></span>L3Harris</div>
+      <div class="logo-cell"><span class="logo-icon"></span>Lockheed Martin</div>
+      <div class="logo-cell"><span class="logo-icon"></span>Leidos</div>
+      <div class="logo-cell"><span class="logo-icon"></span>SAIC</div>
+      <div class="logo-cell"><span class="logo-icon"></span>Hanwha Defense</div>
+      <div class="logo-cell"><span class="logo-icon"></span>B Capital</div>
+      <div class="logo-cell"><span class="logo-icon"></span>U.S. Department of Defense</div>
+      <div class="logo-cell"><span class="logo-icon"></span>Northrop Grumman</div>
+      <div class="logo-cell"><span class="logo-icon"></span>L3Harris</div>
+    </div>
+  </div>
+</section>
+
+<!-- CUSTOMER STORY -->
+<section id="story">
+  <div class="story-media">
+    <video autoplay muted loop playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.85;">
+      <source src="video.mp4" type="video/mp4">
+    </video>
+    <button class="play-btn" aria-label="Play video" style="position:relative;z-index:2;">
+      <svg width="18" height="20" viewBox="0 0 18 20" fill="none">
+        <path d="M2 2l14 8-14 8V2z" fill="rgba(255,255,255,0.9)"/>
+      </svg>
+    </button>
+  </div>
+  <div class="story-content">
+    <p class="story-eyebrow">Customer Stories</p>
+    <h2 class="story-h2">Havoc in the Field</h2>
+    <p class="story-p">From the Indo-Pacific to the North Atlantic, Havoc's collaborative autonomy platform is operating in contested environments today. Over 30 vessels delivered to the U.S. Department of Defense, with 40+ mission-ready systems actively supporting operations.</p>
+    <a class="story-cta" href="#">Read More</a>
+    <p class="stats-label">Featured Stats</p>
+    <div class="stats-row">
+      <div class="stat"><div class="stat-n">100%</div><div class="stat-l">mission-ready delivery rate</div></div>
+      <div class="stat"><div class="stat-n">$1.9B</div><div class="stat-l">addressable market today</div></div>
+      <div class="stat"><div class="stat-n">200M+</div><div class="stat-l">autonomous ops data points</div></div>
+    </div>
+    <div class="story-arrows">
+      <button class="arrow-btn on">&#8249;</button>
+      <button class="arrow-btn">&#8250;</button>
+    </div>
+  </div>
+</section>
+
+<!-- NEWS -->
+<section id="news">
+  <div class="news-top">
+    <div class="news-top-left">
+      <h2 class="news-h2">Latest Updates</h2>
+      <a class="news-view-all" href="#">View Our Newsroom &rsaquo;</a>
+    </div>
+    <div class="news-pager">
+      <button class="pg-btn">&#8249;</button>
+      <button class="pg-btn on">&#8250;</button>
+    </div>
+  </div>
+  <div class="news-grid">
+    <div class="news-card">
+      <div class="news-thumb"><img src="raising-news.jpg" alt=""></div>
+      <div class="news-meta"><span class="news-tag">News</span><span class="news-date">May 12, 2026</span></div>
+      <p class="news-hed">Havoc Raises $100M Series A to Power the Future of All-Domain Collaborative Autonomy</p>
+    </div>
+    <div class="news-card">
+      <div class="news-thumb"><img src="leidos-news.jpg" alt=""></div>
+      <div class="news-meta"><span class="news-tag">News</span><span class="news-date">Apr 20, 2026</span></div>
+      <p class="news-hed">Leidos and Havoc Partner to Integrate Collaborative Autonomy Across Unmanned Fleets</p>
+    </div>
+    <div class="news-card">
+      <div class="news-thumb"><img src="merger-news.jpg" alt=""></div>
+      <div class="news-meta"><span class="news-tag">News</span><span class="news-date">Mar 11, 2026</span></div>
+      <p class="news-hed">Havoc Acquires Mavrik and Teleo, Unifying Sea, Air, and Land Under One Architecture</p>
+    </div>
+  </div>
+</section>
+
+<!-- CTA BAND -->
+<section id="cta-band">
+  <div class="cta-half">
+    <p class="cta-p">Join the team building the future of national security.</p>
+    <a class="cta-btn" href="#">Join Our Mission</a>
+  </div>
+  <div class="cta-half">
+    <p class="cta-p">Ready to see Havoc operate in the field?</p>
+    <a class="cta-btn" href="#footer">Get in Touch</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer id="footer">
+  <div class="footer-top">
+    <div>
+      <a class="footer-logo" href="#"><img src="logo-white.png" alt="Havoc" style="height:30px;display:block;margin-bottom:14px;"></a>
+      <p class="footer-tagline">The leader in all-domain collaborative autonomy. Sea. Air. Land.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Quicklinks</h4>
+      <a href="#">Technology</a><a href="#">About Us</a><a href="#">Newsroom</a><a href="#">Partners</a><a href="#">Careers</a>
+    </div>
+    <div class="footer-col">
+      <h4>Solutions</h4>
+      <a href="#">Defense</a><a href="#">Commercial</a><a href="#">Sea</a><a href="#">Air</a><a href="#">Land</a>
+    </div>
+    <div class="footer-col">
+      <h4>Find Us</h4>
+      <div class="footer-addr"><strong>Headquarters</strong><br>1234 Market Street, Suite #A22<br>Washington, D.C. 20001</div>
+      <a class="view-locs" href="#">View All Locations &rsaquo;</a>
+    </div>
+    <div><a class="footer-contact" href="#">Contact Us</a></div>
+  </div>
+  <div class="footer-bottom">
+    <div class="footer-legal">
+      &copy;2026 Havoc. All rights reserved.
+      <a href="#">Privacy Policy</a><a href="#">Terms &amp; Conditions</a>
+    </div>
+    <div class="social-links">
+      <a class="s-btn" href="https://medium.com/@HavocAI" target="_blank">M</a>
+      <a class="s-btn" href="https://x.com/havocai_usv" target="_blank">&#x1D54F;</a>
+      <a class="s-btn" href="https://www.instagram.com" target="_blank">&#9679;</a>
+      <a class="s-btn" href="https://youtube.com/@HavocAI-Solutions" target="_blank">&#9654;</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   BANNER + NAV
+═══════════════════════════════════════════════════ */
+const bannerEl = document.getElementById('banner');
+const navWrap  = document.getElementById('nav-wrap');
+
+function setNavTop() {
+  navWrap.style.top = (bannerEl ? bannerEl.offsetHeight : 0) + 'px';
+}
+setNavTop();
+
+document.getElementById('banner-close').onclick = () => {
+  const h = bannerEl.offsetHeight;
+  bannerEl.style.transform = 'translateY(-' + (h + 4) + 'px)';
+  bannerEl.style.opacity = '0';
+  bannerEl.style.pointerEvents = 'none';
+  // slide nav up to top:0
+  navWrap.style.top = '0px';
+  setTimeout(() => bannerEl.remove(), 420);
+};
+
+/* nav hide/show on scroll */
+let lastY = 0, scrollRaf = false;
+const heroScroll = document.getElementById('heroScroll');
+window.addEventListener('scroll', () => {
+  if (!scrollRaf) {
+    requestAnimationFrame(() => {
+      const y = window.scrollY;
+      navWrap.classList.toggle('hidden', y > lastY && y > 120);
+      // hero scroll indicator: hide once scrolled at all, reappear at top
+      if (heroScroll) heroScroll.classList.toggle('hidden', y > 80);
+      lastY = y;
+      scrollRaf = false;
+    });
+    scrollRaf = true;
+  }
+}, { passive: true });
+
+/* suppress browser status bar URL preview on placeholder links */
+document.querySelectorAll('a[href="#"]').forEach(a => {
+  a.setAttribute('href', 'javascript:void(0)');
+});
+
+/* ═══════════════════════════════════════════════════
+   MISSION WORD FILL
+═══════════════════════════════════════════════════ */
+const sentence = "Our systems and software power real-time, AI-driven decisions across sea, air, and land — delivering collaborative autonomy from the factory floor to the front lines.";
+const para = document.getElementById('missionPara');
+sentence.split(' ').forEach(w => {
+  const s = document.createElement('span');
+  s.className = 'w';
+  s.textContent = w + ' ';
+  para.appendChild(s);
+});
+const wordEls = para.querySelectorAll('.w');
+function fillWords() {
+  const r = para.getBoundingClientRect();
+  const prog = Math.max(0, Math.min(1, (window.innerHeight * 0.75 - r.top) / (window.innerHeight * 0.5)));
+  const n = Math.floor(prog * wordEls.length);
+  wordEls.forEach((w, i) => w.classList.toggle('on', i < n));
+}
+window.addEventListener('scroll', fillWords, { passive: true });
+fillWords();
+
+/* ═══════════════════════════════════════════════════
+   TABS — auto-rotate with pill fill progress bar
+═══════════════════════════════════════════════════ */
+(function () {
+  const TAB_MS = 5000;
+  const pills  = Array.from(document.querySelectorAll('#tabsNav .tab-pill'));
+  const panels = Array.from(document.querySelectorAll('#capabilities .tab-panel'));
+  const fills  = pills.map(p => p.querySelector('.pill-fill'));
+  let cur      = 0;
+  let startTs  = null;  // null = not yet started this cycle
+  let paused   = false;
+
+  function show(idx) {
+    cur = idx;
+    pills.forEach((p, i) => {
+      p.classList.toggle('active', i === idx);
+      fills[i].style.transform = 'scaleX(0)';
+    });
+    panels.forEach((p, i) => p.classList.toggle('active', i === idx));
+    startTs = null; // reset fill timer for new tab
+  }
+
+  function tick(ts) {
+    if (!paused) {
+      if (startTs === null) startTs = ts;
+      const prog = Math.min((ts - startTs) / TAB_MS, 1);
+      fills[cur].style.transform = 'scaleX(' + prog + ')';
+      if (prog >= 1) {
+        show((cur + 1) % pills.length);
+        // startTs will be set fresh on next frame
+      }
+    }
+    requestAnimationFrame(tick);
+  }
+
+  // init
+  show(0);
+  requestAnimationFrame(tick);
+
+  // manual click — reset timer for selected tab
+  pills.forEach((btn, idx) => {
+    btn.addEventListener('click', () => show(idx));
+  });
+
+  // pause ONLY when mouse is actively over the pills nav, not the whole section
+  // (so scrolling through doesn't break it)
+  const nav = document.getElementById('tabsNav');
+  nav.addEventListener('mouseenter', () => { paused = true; });
+  nav.addEventListener('mouseleave', () => { paused = false; /* startTs stays, resumes from where it was */ });
+})();
+</script>
+</body>
+</html>
